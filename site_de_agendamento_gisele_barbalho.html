@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barber & Beauty Club - Barbearia & Salão com IA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#facc15',
+                        brandPink: '#ec4899',
+                        brandPurple: '#8b5cf6',
+                        brandCyan: '#06b6d4',
+                        darkBg: '#0f0a1c',
+                        darkCard: '#18112c',
+                        darkCardHover: '#23183f',
+                        darkBorder: '#2e1c4e'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons UMD Bundle -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <!-- QRCode Generator library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0a1c;
+        }
+
+        .neon-gradient-text {
+            background: linear-gradient(135deg, #facc15 0%, #ec4899 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .neon-gradient-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%);
+            transition: all 0.3s ease;
+        }
+
+        .neon-gradient-btn:hover {
+            background: linear-gradient(135deg, #facc15 0%, #ec4899 50%, #8b5cf6 100%);
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .glow-yellow {
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.25);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+        }
+
+        .glow-pink {
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.25);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0a1c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #ec4899, #06b6d4);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <header class="sticky top-0 z-40 w-full border-b border-darkBorder bg-darkBg/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Restored Brand Header -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('booking')">
+                    <div class="w-12 h-12 rounded-xl neon-gradient-btn flex items-center justify-center text-white font-black shadow-lg glow-pink">
+                        <i data-lucide="scissors" class="w-6 h-6 stroke-[2.5]"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-black tracking-tight text-white">BARBER & <span class="neon-gradient-text">BEAUTY</span></span>
+                        <span class="block text-[10px] text-brandCyan font-bold tracking-widest uppercase flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brandYellow animate-ping"></span>
+                            Barbearia & Salão Studio IA
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex items-center gap-3">
+                    <button id="btnViewAppts" onclick="switchTab('my-appointments')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-brandCyan/40 bg-brandCyan/10 text-brandCyan hover:bg-brandCyan/20 transition flex items-center gap-2 glow-cyan">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Meus Agendamentos</span>
+                    </button>
+                    
+                    <button id="btnNewAppt" onclick="switchTab('booking')" class="hidden px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold neon-gradient-btn text-white hover:opacity-90 transition flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Novo Agendamento</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: BOOKING & IA GUIDE -->
+        <div id="tabBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- AI Guide Sidebar (4 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <div class="rounded-2xl border border-brandPink/40 bg-gradient-to-b from-darkCard to-darkBg p-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-brandPurple/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-brandCyan/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <!-- Badge Header -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-brandPurple/20 text-brandYellow border border-brandYellow/30 glow-yellow">
+                            <i data-lucide="sparkles" class="w-6 h-6 animate-pulse"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-black text-lg text-white">Guia de IA</h2>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brandPink text-white">PRO</span>
+                            </div>
+                            <p class="text-xs text-brandCyan">Assistente Inteligente de Beleza</p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-300 mb-4 leading-relaxed">
+                        Em dúvida do corte ou cor ideal? Diga o seu objetivo e a nossa IA recomenda o profissional e serviço perfeitos!
+                    </p>
+
+                    <!-- Quick Prompts -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="sendQuickPrompt('Quero um degradê moderno com barba desenhada')" class="text-xs px-2.5 py-1.5 rounded-lg border border-brandYellow/30 bg-darkBg text-gray-200 hover:border-brandYellow hover:text-brandYellow transition flex items-center gap-1">
+                            ✂️ Fade Moderno + Barba
+                        </button>
+                        <button onclick="sendQuickPrompt('Preciso de mechas ou tintura rosa/platinada')" class="text-xs px-2.5 py-1.5 rounded-lg border border-brandPink/30 bg-darkBg text-gray-200 hover:border-brandPink hover:text-brandPink transition flex items-center gap-1">
+                            🎨 Colorimetria & Mechas
+                        </button>
+                        <button onclick="sendQuickPrompt('Quero hidratação capilar profunda e escova')" class="text-xs px-2.5 py-1.5 rounded-lg border border-brandCyan/30 bg-darkBg text-gray-200 hover:border-brandCyan hover:text-brandCyan transition flex items-center gap-1">
+                            💧 Hidratação & Escova
+                        </button>
+                    </div>
+
+                    <!-- AI Chat Box Display -->
+                    <div id="aiChatBox" class="h-60 overflow-y-auto space-y-3 p-3 rounded-xl bg-darkBg/80 border border-darkBorder text-xs mb-4">
+                        <div class="flex gap-2 items-start">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-brandPink to-brandYellow flex items-center justify-center text-darkBg font-black shrink-0 text-[11px] shadow-sm">IA</div>
+                            <div class="bg-darkCard p-3 rounded-xl border border-darkBorder text-gray-200 max-w-[85%] leading-relaxed">
+                                Olá! Sou sua assistente do Barber & Beauty Club. Como posso te ajudar na escolha do visual ideal hoje?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Input Form -->
+                    <form id="aiForm" onsubmit="handleAiSubmit(event)" class="flex gap-2">
+                        <input type="text" id="aiInput" placeholder="Ex: Quero um estilo prático pro dia a dia..." class="flex-1 text-xs bg-darkBg border border-darkBorder rounded-xl px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brandCyan transition">
+                        <button type="submit" class="p-2.5 rounded-xl bg-brandYellow text-darkBg font-bold hover:bg-brandYellow/90 transition shadow-md shadow-brandYellow/20">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="rounded-2xl border border-darkBorder bg-darkCard p-5 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-brandPurple/20 text-brandPink border border-brandPink/30">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Horário de Atendimento</h4>
+                            <p class="text-xs text-gray-400">Terça a Sábado: 09:00 - 20:00</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-brandCyan/20 text-brandCyan border border-brandCyan/30">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Nosso Endereço</h4>
+                            <p class="text-xs text-gray-400">Av. Paulista, 1500 - São Paulo/SP</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="lg:col-span-8">
+                <div class="rounded-2xl border border-darkBorder bg-darkCard p-6 sm:p-8 shadow-2xl relative">
+                    
+                    <div class="border-b border-darkBorder pb-5 mb-6">
+                        <h1 class="text-2xl font-black text-white">Agende Seu Horário</h1>
+                        <p class="text-sm text-gray-400 mt-1">Preencha os campos abaixo para reservar seu atendimento no <span class="text-brandYellow font-semibold">Barber & Beauty Club</span>.</p>
+                    </div>
+
+                    <form id="bookingForm" onsubmit="handleBookingSubmit(event)" class="space-y-8">
+                        
+                        <!-- Step 1: Informações Pessoais -->
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-widest text-brandYellow mb-4 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brandYellow/20 text-brandYellow text-xs flex items-center justify-center font-black border border-brandYellow/40">1</span>
+                                Dados do Cliente
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-300 mb-1">Nome Completo *</label>
+                                    <div class="relative">
+                                        <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3.5 text-brandPurple"></i>
+                                        <input type="text" id="clientName" required placeholder="Ex: Lucas Gabriel" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-darkBg border border-darkBorder text-white text-sm focus:outline-none focus:border-brandCyan transition">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-300 mb-1">Telefone / WhatsApp *</label>
+                                    <div class="relative">
+                                        <i data-lucide="phone" class="w-4 h-4 absolute left-3 top-3.5 text-brandCyan"></i>
+                                        <input type="tel" id="clientPhone" required placeholder="(11) 99999-9999" maxlength="15" oninput="maskPhone(this)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-darkBg border border-darkBorder text-white text-sm focus:outline-none focus:border-brandCyan transition">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Escolha do Profissional -->
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-widest text-brandPink mb-4 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brandPink/20 text-brandPink text-xs flex items-center justify-center font-black border border-brandPink/40">2</span>
+                                Selecione o Profissional
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="professionalsContainer">
+                                <!-- Generated via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Escolha do Serviço -->
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-widest text-brandCyan mb-4 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brandCyan/20 text-brandCyan text-xs flex items-center justify-center font-black border border-brandCyan/40">3</span>
+                                Escolha os Serviços
+                            </h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="servicesContainer">
+                                <!-- Generated via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Data e Hora -->
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-widest text-brandPurple mb-4 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brandPurple/20 text-brandPurple text-xs flex items-center justify-center font-black border border-brandPurple/40">4</span>
+                                Data & Horário
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-300 mb-1">Data do Atendimento *</label>
+                                    <input type="date" id="bookingDate" required onchange="updateAvailableTimes()" class="w-full px-4 py-2.5 rounded-xl bg-darkBg border border-darkBorder text-white text-sm focus:outline-none focus:border-brandPink transition">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-300 mb-1">Horários Disponíveis *</label>
+                                    <div id="timeSlotsContainer" class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                                        <p class="text-xs text-gray-500 col-span-3 py-4 text-center">Selecione uma data para visualizar os horários.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary & Submit Button -->
+                        <div class="border-t border-darkBorder pt-6">
+                            <div class="bg-darkBg/80 p-4 rounded-xl border border-darkBorder mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <div>
+                                    <span class="text-xs text-gray-400 block">Resumo do Agendamento</span>
+                                    <span id="summaryText" class="text-sm font-medium text-gray-200">Nenhum serviço selecionado</span>
+                                </div>
+                                <div class="text-right flex items-center sm:block gap-3">
+                                    <span class="text-xs text-gray-400 block">Valor Total</span>
+                                    <span id="summaryTotal" class="text-2xl font-black text-brandYellow">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnSubmitBooking" class="w-full py-4 rounded-xl neon-gradient-btn text-white font-black text-base shadow-xl hover:opacity-95 transition flex items-center justify-center gap-2 uppercase tracking-wider">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                Confirmar e Reservar Horário
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="tabMyAppointments" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-darkBorder pb-5">
+                <div>
+                    <h1 class="text-2xl font-black text-white">Painel de Agendamentos</h1>
+                    <p class="text-sm text-gray-400">Consulte ou gerencie todos os horários reservados no sistema.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="clearAllAppointments()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition">
+                        Limpar Histórico
+                    </button>
+                    <button onclick="switchTab('booking')" class="px-4 py-2 rounded-xl text-xs font-bold neon-gradient-btn text-white hover:opacity-90 transition">
+                        + Novo Agendamento
+                    </button>
+                </div>
+            </div>
+
+            <div id="appointmentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+    </main>
+
+    <div id="confirmationModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-darkCard border border-darkBorder rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            
+            <button onclick="closeModal()" class="absolute right-4 top-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="text-center space-y-3 mb-6">
+                <div class="w-14 h-14 bg-brandCyan/20 text-brandCyan border border-brandCyan/40 rounded-full flex items-center justify-center mx-auto glow-cyan">
+                    <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+                </div>
+                <h3 class="text-xl font-black text-white">Agendamento Confirmado!</h3>
+                <p class="text-xs text-gray-400">Seu horário foi garantido no Barber & Beauty Club.</p>
+            </div>
+
+            <!-- Ticket Details Card -->
+            <div class="bg-darkBg p-4 rounded-xl border border-darkBorder space-y-3 mb-6 text-sm">
+                <div class="flex justify-between border-b border-darkBorder pb-2">
+                    <span class="text-gray-400 text-xs">Código do Ticket:</span>
+                    <span id="modalTicketCode" class="font-mono font-bold text-brandYellow">#BB-0000</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 text-xs">Cliente:</span>
+                    <span id="modalClientName" class="font-semibold text-white">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 text-xs">Profissional:</span>
+                    <span id="modalProfName" class="font-semibold text-brandCyan">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 text-xs">Serviços:</span>
+                    <span id="modalServices" class="font-medium text-white text-right max-w-[60%]">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400 text-xs">Data & Hora:</span>
+                    <span id="modalDateTime" class="font-bold text-brandPink">-</span>
+                </div>
+                <div class="flex justify-between border-t border-darkBorder pt-2">
+                    <span class="text-gray-400 text-xs">Total a Pagar:</span>
+                    <span id="modalTotal" class="font-black text-brandYellow text-base">R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- QR Code Check-in Simulation -->
+            <div class="flex flex-col items-center justify-center p-3 bg-white rounded-xl mb-6">
+                <div id="qrcode" class="p-1"></div>
+                <span class="text-[10px] text-gray-800 font-semibold mt-1">Check-in QR Code</span>
+            </div>
+
+            <!-- WhatsApp Direct Button -->
+            <div class="space-y-2">
+                <button id="btnWhatsappShare" onclick="shareToWhatsApp()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                    Enviar Confirmação via WhatsApp
+                </button>
+                <button onclick="closeModal()" class="w-full py-2.5 rounded-xl border border-darkBorder text-gray-300 hover:text-white text-xs font-semibold transition">
+                    Fechar Janela
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-darkCard border border-brandYellow/60 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i data-lucide="info" class="w-5 h-5 text-brandYellow"></i>
+        <span id="toastMsg" class="text-xs font-semibold">Notificação</span>
+    </div>
+
+    <script>
+        /* Safe Lucide Icon Handler */
+        function safeLucideCreateIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
+        }
+
+        /* Initial Data Setup */
+        const PROFESSIONALS = [
+            {
+                id: 'prof-1',
+                name: 'Lucas Silva',
+                role: 'Mestre Barbeiro',
+                specialty: 'Fade Navalhado, Barba & Visagismo',
+                rating: '4.9 ★',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
+                accentColor: 'border-brandYellow text-brandYellow'
+            },
+            {
+                id: 'prof-2',
+                name: 'Juliana Costa',
+                role: 'Master Hair Stylist',
+                specialty: 'Colorimetria, Mechas & Cortes Femininos',
+                rating: '5.0 ★',
+                avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=250',
+                accentColor: 'border-brandPink text-brandPink'
+            },
+            {
+                id: 'prof-3',
+                name: 'Rafael Oliveira',
+                role: 'Especialista Capilar',
+                specialty: 'Tintura, Tratamentos & Hidratação',
+                rating: '4.8 ★',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250',
+                accentColor: 'border-brandCyan text-brandCyan'
+            }
+        ];
+
+        const SERVICES = [
+            { id: 'serv-1', name: 'Corte de Cabelo (Masculino / Feminino)', price: 65, time: '45 min', icon: 'scissors' },
+            { id: 'serv-2', name: 'Barba Completa com Toalha Quente', price: 45, time: '30 min', icon: 'smile' },
+            { id: 'serv-3', name: 'Combo: Corte + Barba Premium', price: 100, time: '1h 15m', icon: 'sparkles' },
+            { id: 'serv-4', name: 'Tintura, Mechas ou Platinado', price: 130, time: '1h 30m', icon: 'palette' },
+            { id: 'serv-5', name: 'Tratamento Capilar & Escova', price: 85, time: '40 min', icon: 'droplet' }
+        ];
+
+        const AVAILABLE_HOURS = ['09:00', '10:00', '11:00', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:00'];
+
+        /* App State */
+        let selectedProfessional = PROFESSIONALS[0].id;
+        let selectedServices = [];
+        let selectedTimeSlot = '';
+        let currentBookingData = null;
+
+        /* Window Load Lifecycle */
+        window.addEventListener('DOMContentLoaded', () => {
+            safeLucideCreateIcons();
+            renderProfessionals();
+            renderServices();
+            setupDateLimits();
+            loadAppointmentsFromStorage();
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').value = today;
+            updateAvailableTimes();
+        });
+
+        /* Tab Switching Logic */
+        function switchTab(tab) {
+            const bookingTab = document.getElementById('tabBooking');
+            const apptsTab = document.getElementById('tabMyAppointments');
+            const btnAppts = document.getElementById('btnViewAppts');
+            const btnNew = document.getElementById('btnNewAppt');
+
+            if (tab === 'my-appointments') {
+                bookingTab.classList.add('hidden');
+                apptsTab.classList.remove('hidden');
+                btnAppts.classList.add('hidden');
+                btnNew.classList.remove('hidden');
+                renderAppointmentsList();
+            } else {
+                apptsTab.classList.add('hidden');
+                bookingTab.classList.remove('hidden');
+                btnNew.classList.add('hidden');
+                btnAppts.classList.remove('hidden');
+            }
+        }
+
+        function renderProfessionals() {
+            const container = document.getElementById('professionalsContainer');
+            container.innerHTML = PROFESSIONALS.map(prof => {
+                const isSelected = selectedProfessional === prof.id;
+                return `
+                    <div onclick="selectProfessional('${prof.id}')" class="cursor-pointer p-4 rounded-xl border transition-all duration-200 ${isSelected ? 'border-brandPink bg-brandPink/10 shadow-lg glow-pink' : 'border-darkBorder bg-darkBg hover:border-gray-500'}">
+                        <div class="flex items-center gap-3">
+                            <img src="${prof.avatar}" alt="${prof.name}" class="w-12 h-12 rounded-full object-cover border-2 ${isSelected ? 'border-brandYellow' : 'border-darkBorder'}">
+                            <div>
+                                <h4 class="text-sm font-bold text-white">${prof.name}</h4>
+                                <p class="text-xs font-semibold ${prof.accentColor.split(' ')[1]}">${prof.role}</p>
+                                <p class="text-[11px] text-gray-400 mt-0.5 line-clamp-1">${prof.specialty}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectProfessional(id) {
+            selectedProfessional = id;
+            renderProfessionals();
+            updateSummary();
+        }
+
+        function renderServices() {
+            const container = document.getElementById('servicesContainer');
+            container.innerHTML = SERVICES.map(serv => {
+                const isSelected = selectedServices.includes(serv.id);
+                return `
+                    <div onclick="toggleService('${serv.id}')" class="cursor-pointer p-3.5 rounded-xl border transition-all flex items-center justify-between ${isSelected ? 'border-brandCyan bg-brandCyan/10 text-white shadow-md glow-cyan' : 'border-darkBorder bg-darkBg text-gray-300 hover:border-gray-500'}">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 rounded-lg ${isSelected ? 'bg-brandCyan text-darkBg' : 'bg-darkCard text-brandYellow'}">
+                                <i data-lucide="${serv.icon}" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">${serv.name}</h4>
+                                <span class="text-[10px] text-gray-400">⏱ ${serv.time}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-black text-brandYellow">R$ ${serv.price.toFixed(2)}</span>
+                    </div>
+                `;
+            }).join('');
+            safeLucideCreateIcons();
+        }
+
+        function toggleService(id) {
+            if (selectedServices.includes(id)) {
+                selectedServices = selectedServices.filter(sId => sId !== id);
+            } else {
+                selectedServices.push(id);
+            }
+            renderServices();
+            updateSummary();
+        }
+
+        function setupDateLimits() {
+            const dateInput = document.getElementById('bookingDate');
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + 30);
+
+            dateInput.min = today.toISOString().split('T')[0];
+            dateInput.max = maxDate.toISOString().split('T')[0];
+        }
+
+        function updateAvailableTimes() {
+            const container = document.getElementById('timeSlotsContainer');
+            selectedTimeSlot = '';
+
+            container.innerHTML = AVAILABLE_HOURS.map(hour => `
+                <button type="button" onclick="selectTimeSlot('${hour}', this)" class="time-slot-btn py-2 px-3 text-xs rounded-xl border border-darkBorder bg-darkBg text-gray-300 hover:border-brandCyan transition text-center font-medium">
+                    ${hour}
+                </button>
+            `).join('');
+
+            updateSummary();
+        }
+
+        function selectTimeSlot(hour, btnElement) {
+            document.querySelectorAll('.time-slot-btn').forEach(btn => {
+                btn.classList.remove('border-brandYellow', 'bg-brandYellow', 'text-darkBg', 'font-bold');
+                btn.classList.add('border-darkBorder', 'bg-darkBg', 'text-gray-300');
+            });
+
+            btnElement.classList.remove('border-darkBorder', 'bg-darkBg', 'text-gray-300');
+            btnElement.classList.add('border-brandYellow', 'bg-brandYellow', 'text-darkBg', 'font-bold');
+
+            selectedTimeSlot = hour;
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryText = document.getElementById('summaryText');
+            const summaryTotal = document.getElementById('summaryTotal');
+
+            const selectedServObjects = SERVICES.filter(s => selectedServices.includes(s.id));
+            const total = selectedServObjects.reduce((acc, curr) => acc + curr.price, 0);
+
+            if (selectedServObjects.length === 0) {
+                summaryText.innerText = 'Nenhum serviço selecionado';
+            } else {
+                const names = selectedServObjects.map(s => s.name).join(', ');
+                summaryText.innerText = `${selectedServObjects.length} serviço(s): ${names}`;
+            }
+
+            summaryTotal.innerText = `R$ ${total.toFixed(2)}`;
+        }
+
+        function maskPhone(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+
+            if (value.length > 6) {
+                value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+            } else if (value.length > 2) {
+                value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+            } else if (value.length > 0) {
+                value = `(${value}`;
+            }
+            input.value = value;
+        }
+
+        function handleAiSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('aiInput');
+            const query = input.value.trim();
+            if (!query) return;
+
+            addAiMessage(query, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                processAiResponse(query);
+            }, 500);
+        }
+
+        function sendQuickPrompt(promptText) {
+            document.getElementById('aiInput').value = promptText;
+            handleAiSubmit(new Event('submit'));
+        }
+
+        function addAiMessage(text, sender = 'ai') {
+            const chatBox = document.getElementById('aiChatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex gap-2 items-start';
+
+            if (sender === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="ml-auto bg-brandPink/20 text-brandPink border border-brandPink/30 p-2.5 rounded-xl max-w-[85%] text-right font-medium">
+                        ${text}
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-brandPink to-brandYellow flex items-center justify-center text-darkBg font-black shrink-0 text-[11px] shadow-sm">IA</div>
+                    <div class="bg-darkCard p-3 rounded-xl border border-darkBorder text-gray-200 max-w-[85%] leading-relaxed">
+                        ${text}
+                    </div>
+                `;
+            }
+
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function processAiResponse(query) {
+            const q = query.toLowerCase();
+            let reply = "";
+
+            if (q.includes("barba") || q.includes("degradê") || q.includes("fade") || q.includes("corte")) {
+                reply = "Para estilo de barba esculpida e fade impecável: O barbeiro **Lucas Silva** é nosso especialista! Selecionei o Combo Premium para você.";
+                selectProfessional('prof-1');
+                if (!selectedServices.includes('serv-3')) toggleService('serv-3');
+            } else if (q.includes("cor") || q.includes("mechas") || q.includes("platinado") || q.includes("tintura")) {
+                reply = "Para coloração vibrante e mechas incríveis: A **Juliana Costa** é nossa Master Colorist! Selecionei o serviço de Tintura e Mechas.";
+                selectProfessional('prof-2');
+                if (!selectedServices.includes('serv-4')) toggleService('serv-4');
+            } else if (q.includes("hidratação") || q.includes("escova") || q.includes("tratamento")) {
+                reply = "Para renovar o brilho e a saúde do seu cabelo: Recomendo o especialista **Rafael Oliveira** com nosso serviço de Tratamento Capilar & Escova.";
+                selectProfessional('prof-3');
+                if (!selectedServices.includes('serv-5')) toggleService('serv-5');
+            } else {
+                reply = "Ótima escolha! No **Barber & Beauty Club** você encontra profissionais altamente qualificados. Escolha um serviço ao lado para concluir!";
+                if (!selectedServices.includes('serv-1')) toggleService('serv-1');
+            }
+
+            addAiMessage(reply, 'ai');
+        }
+
+        function handleBookingSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const date = document.getElementById('bookingDate').value;
+
+            if (selectedServices.length === 0) {
+                showToast('Por favor, selecione pelo menos um serviço.');
+                return;
+            }
+
+            if (!selectedTimeSlot) {
+                showToast('Por favor, escolha um horário disponível.');
+                return;
+            }
+
+            const profObj = PROFESSIONALS.find(p => p.id === selectedProfessional);
+            const servObjs = SERVICES.filter(s => selectedServices.includes(s.id));
+            const total = servObjs.reduce((a, b) => a + b.price, 0);
+            const ticketCode = `#BB-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            currentBookingData = {
+                id: Date.now(),
+                ticketCode,
+                clientName: name,
+                clientPhone: phone,
+                professional: profObj.name,
+                services: servObjs.map(s => s.name).join(', '),
+                date,
+                time: selectedTimeSlot,
+                total: total.toFixed(2)
+            };
+
+            saveAppointmentToStorage(currentBookingData);
+            showModal(currentBookingData);
+        }
+
+        function saveAppointmentToStorage(appt) {
+            const list = getAppointmentsFromStorage();
+            list.unshift(appt);
+            localStorage.setItem('barberbeauty_appts', JSON.stringify(list));
+        }
+
+        function getAppointmentsFromStorage() {
+            const saved = localStorage.getItem('barberbeauty_appts');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function loadAppointmentsFromStorage() {
+            renderAppointmentsList();
+        }
+
+        function clearAllAppointments() {
+            if (confirm('Deseja realmente apagar o histórico de agendamentos?')) {
+                localStorage.removeItem('barberbeauty_appts');
+                renderAppointmentsList();
+                showToast('Histórico excluído.');
+            }
+        }
+
+        function showModal(data) {
+            document.getElementById('modalTicketCode').innerText = data.ticketCode;
+            document.getElementById('modalClientName').innerText = data.clientName;
+            document.getElementById('modalProfName').innerText = data.professional;
+            document.getElementById('modalServices').innerText = data.services;
+            
+            const [y, m, d] = data.date.split('-');
+            document.getElementById('modalDateTime').innerText = `${d}/${m}/${y} às ${data.time}`;
+            document.getElementById('modalTotal').innerText = `R$ ${data.total}`;
+
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: `TICKET:${data.ticketCode}|CLIENT:${data.clientName}|DATE:${data.date}`,
+                width: 100,
+                height: 100,
+                colorDark: "#0f0a1c",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('confirmationModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            document.getElementById('bookingForm').reset();
+            selectedServices = [];
+            selectedTimeSlot = '';
+            renderServices();
+            updateAvailableTimes();
+        }
+
+        function shareToWhatsApp() {
+            if (!currentBookingData) return;
+            
+            const [y, m, d] = currentBookingData.date.split('-');
+            const text = `*Agendamento Barber %26 Beauty Club* ✂️✨%0A` +
+                `*Ticket:* ${currentBookingData.ticketCode}%0A` +
+                `*Cliente:* ${currentBookingData.clientName}%0A` +
+                `*Profissional:* ${currentBookingData.professional}%0A` +
+                `*Serviços:* ${currentBookingData.services}%0A` +
+                `*Data/Hora:* ${d}/${m}/${y} às ${currentBookingData.time}%0A` +
+                `*Total:* R$ ${currentBookingData.total}`;
+
+            const phoneClean = currentBookingData.clientPhone.replace(/\D/g, '');
+            const url = `https://api.whatsapp.com/send?phone=55${phoneClean}&text=${text}`;
+            window.open(url, '_blank');
+        }
+
+        function renderAppointmentsList() {
+            const list = getAppointmentsFromStorage();
+            const container = document.getElementById('appointmentsList');
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-gray-500">
+                        <i data-lucide="calendar-x" class="w-12 h-12 mx-auto mb-3 opacity-40 text-brandPink"></i>
+                        <p class="text-sm">Nenhum agendamento encontrado no histórico.</p>
+                    </div>
+                `;
+                safeLucideCreateIcons();
+                return;
+            }
+
+            container.innerHTML = list.map(item => {
+                const [y, m, d] = item.date.split('-');
+                return `
+                    <div class="p-5 rounded-2xl border border-darkBorder bg-darkCard space-y-3">
+                        <div class="flex items-center justify-between border-b border-darkBorder pb-2">
+                            <span class="font-mono text-xs text-brandYellow font-bold">${item.ticketCode}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brandCyan/10 text-brandCyan border border-brandCyan/30">Confirmado</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-sm">${item.clientName}</h4>
+                            <p class="text-xs text-gray-400">📞 ${item.clientPhone}</p>
+                        </div>
+                        <div class="text-xs text-gray-300 space-y-1">
+                            <p><strong>Profissional:</strong> <span class="text-brandCyan">${item.professional}</span></p>
+                            <p><strong>Serviços:</strong> ${item.services}</p>
+                            <p><strong>Data/Hora:</strong> <span class="text-brandPink">${d}/${m}/${y} às ${item.time}</span></p>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-darkBorder pt-3">
+                            <span class="text-sm font-black text-brandYellow">R$ ${item.total}</span>
+                            <button onclick="cancelAppointment(${item.id})" class="text-xs text-red-400 hover:text-red-300 font-medium">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            safeLucideCreateIcons();
+        }
+
+        function cancelAppointment(id) {
+            if (confirm('Deseja cancelar este agendamento?')) {
+                let list = getAppointmentsFromStorage();
+                list = list.filter(item => item.id !== id);
+                localStorage.setItem('barberbeauty_appts', JSON.stringify(list));
+                renderAppointmentsList();
+                showToast('Agendamento cancelado.');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
